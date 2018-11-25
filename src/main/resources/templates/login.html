@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html th:lang="pl-PL" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/headFragment"></head>
+<body>
+<div class="container mainContentContainer">
+    <header th:replace="fragments/navbarFragment"></header>
+    <main class="container">
+        <div th:unless="${session.loggedIn == true}">
+            <h1>Login in</h1>
+            <form method="GET" th:action="@{/login/signin}" th:object="${loginForm}">
+                <div><label for="username">Username:</label></div>
+                <input id="username" type="text" name="username" th:value="*{username}"/>
+                <div><label for="password" th:value="*{username}">Password:</label></div>
+                <input id="password" type="password" name="password" th:value="*{password}"/>
+                <div><input type="submit" value="Login"/>
+                    <a href="#" th:href="@{/register}">[Go to Register]</a></div>
+            </form>
+        </div>
+        <div th:if="${session.loggedIn == true}">
+            <div>
+                <p>Zalogowano jako użytkownik: <span th:text="*{session.loggedUser.name}">Sebastian</span>.</p>
+            </div>
+            <a href="#" class="button" th:href="@{/login/signout}">Wyloguj</a>
+        </div>
+    </main>
+    <footer th:replace="fragments/footerFragment"></footer>
+</div>
+<div th:replace="fragments/scriptFragment"></div>
+</body>
+</html><!DOCTYPE html>

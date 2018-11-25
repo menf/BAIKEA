@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html th:lang="pl-PL" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/headFragment"></head>
+<body>
+<div class="container mainContentContainer">
+    <header th:replace="fragments/navbarFragment"></header>
+    <main class="container">
+        <div>
+            <form method="GET" th:action="@{/messages/edit/submit}" th:object="${editMessageForm}">
+                <div><label for="messageText">Message:</label></div>
+                <input id="messageText" type="text" name="messageText" th:value="*{messageText}"/>
+                <div><label for="allowedUserId">Message:</label></div>
+                <select id="allowedUserId" type="select" name="allowedUserId" th:field="*{allowedUserId}">
+                    <option value=""></option>
+                    <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.name}"></option>
+                </select>
+                <div><input type="submit" value="Submit"/>
+            </form>
+        </div>
+    </main>
+    <footer th:replace="fragments/footerFragment"></footer>
+</div>
+<div th:replace="fragments/scriptFragment"></div>
+</body>
+</html>

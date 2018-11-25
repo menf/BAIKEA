@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html th:lang="pl-PL" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/headFragment"></head>
+<body>
+<div class="container mainContentContainer">
+    <header th:replace="fragments/navbarFragment"></header>
+    <main class="container">
+        <div class="row">
+            <table width="100%">
+                <tr>
+                    <th>Użytkownik</th>
+                    <th>Wiadomość</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                <tr data-th-each="message : ${messages}">
+                    <td data-th-text="${message.user.name}">...</td>
+                    <td data-th-text="${message.text}">...</td>
+                    <td>
+                        <a class="btn"
+                           th:classappend="${isAdmin} ? active : (${message.user.id} == ${loggedUserId} ? active : (${#lists.contains(allowedMessages, message)} ? active : disabled))"
+                           th:href="@{'/messages/edit?messageId=' + ${message.id}}" role="button">Edytuj</a>
+                    </td>
+                    <td>
+                        <a class="btn"
+                           th:classappend="${isAdmin} ? active : (${message.user.id} == ${loggedUserId} ? active : disabled)"
+                           th:href="@{'/messages/delete?messageId=' + ${message.id}}" role="button">Usuń</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div th:if="${session.loggedIn == true}" class="container">
+            <form method="GET" action="/messages/add">
+                <div class="row">
+                    <textarea id="messageText" type="text" name="messageText" th:value="*{messageText}"
+                              rows="3"></textarea>
+                </div>
+                <div class="row">
+                    <input type="submit" value="Dodaj"/>
+                </div>
+            </form>
+
+        </div>
+    </main>
+    <footer th:replace="fragments/footerFragment"></footer>
+</div>
+<div th:replace="fragments/scriptFragment"></div>
+</body>
+</html>
