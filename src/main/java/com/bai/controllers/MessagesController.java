@@ -1,5 +1,6 @@
 package com.bai.controllers;
 
+import com.bai.models.AllowedMessages;
 import com.bai.models.EditMessageForm;
 import com.bai.models.Message;
 import com.bai.models.User;
@@ -81,21 +82,47 @@ public class MessagesController {
         List<Message> allowedMessages = messageService.findAllowedMessages(user.getId());
         if (!allowedMessages.contains(message) && message.getUser().getId() != user.getId())
             throw new NoPermissionException("No edit permissions!");
-        model.addAttribute("editMessageForm", new EditMessageForm( message.getText()));
+        model.addAttribute("editMessageForm", new EditMessageForm(message.getId(), message.getText(), message.getUser().getId()));
         List<User> users = messageService.getUserRepository().findAll();
         users.removeIf(u -> u.getId() == user.getId());
         model.addAttribute("users", users);
+        if (message.getUser().getId() == user.getId())
+            model.addAttribute("isMessageOwner", true);
         return "messagesEditor";
     }
 
     @RequestMapping(value = "/edit/submit", method = RequestMethod.GET)
     public String editMessage(@ModelAttribute EditMessageForm editMessageForm,
-                              Model model) {
-
-        model.addAttribute("messages", messageService.findAll());
-        model.addAttribute("isAdmin", false);
-        model.addAttribute("loggedUserId", 1);
-        return "messagesEditor";
+                              Model model) throws NoPermissionException, InvalidAttributeValueException {
+        Optional<User> userResult = messageService.getUserRepository().findById(editMessageForm.getUserId());
+        if (!userResult.isPresent())
+            throw new NoPermissionException("Log in to edit messages");
+        Optional<Message> messageResult = messageService.getMessageRepository().findById(editMessageForm.getMessageId());
+        if (!messageResult.isPresent())
+            throw new InvalidAttributeValueException("Message with id = " + editMessageForm.getMessageId() + " does not exist.");
+        Message message = messageResult.get();
+        User user = userResult.get();
+        if (message.getUser().getId() != user.getId() && editMessageForm.getAllowedUserId().length > 0) {
+            throw new NoPermissionException("Only owner can add permissions");
+        }
+        for (int allowFor : editMessageForm.getAllowedUserId()) {
+            Optional<User> addUserResult = messageService.getUserRepository().findById(allowFor);
+            if (!addUserResult.isPresent())
+                throw new InvalidAttributeValueException("User with id = " + allowFor + " does not exist.");
+            User addUser = addUserResult.get();
+            AllowedMessages allowedMessages;
+            Optional<AllowedMessages> revokeMessage = messageService.getAllowedMessagesRepository().findByUserIdAndMessageId(allowFor, message.getId());
+            if (revokeMessage.isPresent()) {
+                allowedMessages = revokeMessage.get();
+                messageService.getAllowedMessagesRepository().delete(allowedMessages);
+            } else {
+                allowedMessages = new AllowedMessages(addUser, message);
+                messageService.getAllowedMessagesRepository().save(allowedMessages);
+            }
+        }
+        message.setText(editMessageForm.getMessageText());
+        messageService.getMessageRepository().save(message);
+        return "redirect:/messages";
     }
 
     public static HttpSession session() {

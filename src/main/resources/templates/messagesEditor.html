@@ -7,14 +7,19 @@
     <main class="container">
         <div>
             <form method="GET" th:action="@{/messages/edit/submit}" th:object="${editMessageForm}">
+                <input hidden id="messageId" type="text" name="messageId" th:value="*{messageId}"/>
+                <input hidden id="userId" type="text" name="userId" th:value="*{userId}"/>
                 <div><label for="messageText">Message:</label></div>
                 <input id="messageText" type="text" name="messageText" th:value="*{messageText}"/>
-                <div><label for="allowedUserId">Message:</label></div>
-                <select id="allowedUserId" type="select" name="allowedUserId" th:field="*{allowedUserId}">
-                    <option value=""></option>
-                    <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.name}"></option>
-                </select>
-                <div><input type="submit" value="Submit"/>
+
+                <div th:if="${isMessageOwner == true}">
+                    <div><label for="allowedUserId">Allowed users:</label></div>
+                    <select id="allowedUserId" type="select" name="allowedUserId" th:field="*{allowedUserId}">
+                        <option value=""></option>
+                        <option th:each="user : ${users}" th:value="${user.id}" th:text="${user.name}"></option>
+                    </select>
+                </div>
+                <div><input type="submit" value="Submit"/></div>
             </form>
         </div>
     </main>

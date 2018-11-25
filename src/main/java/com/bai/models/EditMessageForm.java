@@ -6,10 +6,30 @@ public class EditMessageForm {
 
     @Size(min = 1, max = 255)
     private String messageText;
-    private String[] allowedUserId;
+    private int messageId;
+    private int userId;
+    private int[] allowedUserId;
 
-    public EditMessageForm(String messageText) {
+    public EditMessageForm(int messageId, @Size(min = 1, max = 255) String messageText, int userId) {
         this.messageText = messageText;
+        this.messageId = messageId;
+        this.userId = userId;
+    }
+
+    public int getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(int messageId) {
+        this.messageId = messageId;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public String getMessageText() {
@@ -20,11 +40,11 @@ public class EditMessageForm {
         this.messageText = messageText;
     }
 
-    public String[] getAllowedUserId() {
+    public int[] getAllowedUserId() {
         return allowedUserId;
     }
 
-    public void setAllowedUserId(String[] allowedUserId) {
+    public void setAllowedUserId(int[] allowedUserId) {
         this.allowedUserId = allowedUserId;
     }
 }
