@@ -2,7 +2,7 @@ package com.bai.models;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "MESSAGES")
@@ -17,7 +17,7 @@ public class Message implements Serializable {
     @Column(name = "TEXT", nullable = false)
     private String text;
     @Column(name = "MODIFIED")
-    private Timestamp modified;
+    private LocalDateTime modified;
 
     protected Message() {
     }
@@ -27,7 +27,7 @@ public class Message implements Serializable {
         this.text = text;
     }
 
-    public Message(User user, String text, Timestamp modified) {
+    public Message(User user, String text, LocalDateTime modified) {
         this.user = user;
         this.text = text;
         this.modified = modified;
@@ -57,11 +57,11 @@ public class Message implements Serializable {
         this.text = text;
     }
 
-    public Timestamp getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 
-    public void setModified(Timestamp modified) {
+    public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
 

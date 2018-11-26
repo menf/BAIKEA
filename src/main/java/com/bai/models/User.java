@@ -2,7 +2,7 @@ package com.bai.models;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "USERS")
@@ -16,7 +16,17 @@ public class User implements Serializable {
     @Column(name = "PASSWORD_HASH", nullable = false)
     private String passwordHash;
     @Column(name = "LAST_LOGIN")
-    private Timestamp lastLogin;
+    private LocalDateTime lastLogin;
+    @Column(name = "LAST_INVALID_LOGIN")
+    private LocalDateTime lastInvalidLogin;
+    @Column(name = "INVALID_LOGIN_ATTEMPTS")
+    private int invalidLoginAttempts;
+    @Column(name = "ATTEMPTS_TO_LOCK")
+    private int attemptsToLock;
+    @Column(name = "SECRET_QUESTION")
+    private String secretQuestion;
+    @Column(name = "SECRET_ANSWER")
+    private String secretAnswer;
 
     protected User() {
     }
@@ -26,7 +36,7 @@ public class User implements Serializable {
         this.passwordHash = passwordHash;
     }
 
-    public User(String name, String passwordHash, Timestamp lastLogin) {
+    public User(String name, String passwordHash, LocalDateTime lastLogin) {
         this.name = name;
         this.passwordHash = passwordHash;
         this.lastLogin = lastLogin;
@@ -56,13 +66,54 @@ public class User implements Serializable {
         this.passwordHash = passwordHash;
     }
 
-    public Timestamp getLastLogin() {
+    public LocalDateTime getLastLogin() {
         return lastLogin;
     }
 
-    public void setLastLogin(Timestamp lastLogin) {
+    public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
     }
+
+    public LocalDateTime getLastInvalidLogin() {
+        return lastInvalidLogin;
+    }
+
+    public void setLastInvalidLogin(LocalDateTime lastInvalidLogin) {
+        this.lastInvalidLogin = lastInvalidLogin;
+    }
+
+    public int getInvalidLoginAttempts() {
+        return invalidLoginAttempts;
+    }
+
+    public void setInvalidLoginAttempts(int invalidLoginAttempts) {
+        this.invalidLoginAttempts = invalidLoginAttempts;
+    }
+
+    public int getAttemptsToLock() {
+        return attemptsToLock;
+    }
+
+    public void setAttemptsToLock(int attemptsToLock) {
+        this.attemptsToLock = attemptsToLock;
+    }
+
+    public String getSecretQuestion() {
+        return secretQuestion;
+    }
+
+    public void setSecretQuestion(String secretQuestion) {
+        this.secretQuestion = secretQuestion;
+    }
+
+    public String getSecretAnswer() {
+        return secretAnswer;
+    }
+
+    public void setSecretAnswer(String secretAnswer) {
+        this.secretAnswer = secretAnswer;
+    }
+
 
     @Override
     public String toString() {

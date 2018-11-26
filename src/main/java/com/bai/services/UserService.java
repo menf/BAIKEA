@@ -28,12 +28,12 @@ public class UserService {
         return userResult.isPresent() ? userResult.get() : null;
     }
 
-    public User createUser(String username, String password) {
+    public User createOrUpdate(String username, String password) {
         User user = new User(username, password);
         return userRepository.save(user);
     }
 
-    public User createUser(User user) {
+    public User createOrUpdate(User user) {
         return userRepository.save(user);
     }
 

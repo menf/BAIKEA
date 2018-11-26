@@ -12,16 +12,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.management.InvalidAttributeValueException;
 import javax.naming.AuthenticationException;
 import javax.naming.NoPermissionException;
-import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static com.bai.utils.SessionUtil.session;
 
 @Controller
 @RequestMapping("/messages")
@@ -51,6 +51,7 @@ public class MessagesController {
         if (user == null)
             throw new AuthenticationException("Log in to add messages");
         Message message = new Message(user, messageText);
+        message.setModified(LocalDateTime.now());
         messageService.create(message);
         return "redirect:/messages";
     }
@@ -130,13 +131,10 @@ public class MessagesController {
             }
         }
         message.setText(editMessageForm.getMessageText());
+        message.setModified(LocalDateTime.now());
         messageService.getMessageRepository().save(message);
         return "redirect:/messages";
     }
 
-    public static HttpSession session() {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        return attr.getRequest().getSession(true); // true == allow create
-    }
 
 }

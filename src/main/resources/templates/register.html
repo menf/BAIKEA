@@ -5,9 +5,7 @@
 <div class="container mainContentContainer">
     <header th:replace="fragments/navbarFragment"></header>
     <main class="container">
-        <div th:if="${invalidData == true}">
-            <span th:text="${errorMessage}"></span>
-        </div>
+        <h2 th:if="${!#strings.isEmpty(errorMessage)}" th:text="${errorMessage}"></h2>
         <form method="GET" th:action="@{/register/submit}" th:object="${createForm}">
             <div><label for="username">Username:</label></div>
             <input id="username" type="text" name="username" th:value="*{username}"/>
@@ -15,7 +13,7 @@
             <input id="password" type="password" name="password" th:value="*{password}"/>
             <div><label for="passwordConfirm">Confirm Password:</label></div>
             <input id="passwordConfirm" type="password" name="passwordConfirm" th:value="*{passwordConfirm}"/>
-            <div><input type="submit" value="Register"/>
+            <div><input type="submit" value="Register"/></div>
         </form>
     </main>
     <footer th:replace="fragments/footerFragment"></footer>

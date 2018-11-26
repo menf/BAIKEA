@@ -26,17 +26,18 @@ public class RegisterController {
     @RequestMapping(value = "/submit", method = RequestMethod.GET)
     public String registerSubmit(@ModelAttribute CreateUserForm createForm, Model model) {
         User userResult = userService.findByName(createForm.getUsername());
+        model.addAttribute("createForm", createForm);
         if (userResult != null) {
             model.addAttribute("invalidData", true);
             model.addAttribute("errorMessage", "User already exists");
-            return "redirect:/register";
+            return "/register";
         }
         if (!createForm.getPassword().equals(createForm.getPasswordConfirm())) {
             model.addAttribute("invalidData", true);
             model.addAttribute("errorMessage", "Passwords must match.");
-            return "redirect:/register";
+            return "/register";
         }
-        userService.createUser(createForm.getUsername(), createForm.getPassword());
+        userService.createOrUpdate(createForm.getUsername(), createForm.getPassword());
         return "redirect:/login";
     }
 

@@ -6,7 +6,8 @@
     <header th:replace="fragments/navbarFragment"></header>
     <main class="container">
         <div th:unless="${session.loggedIn == true}">
-            <h1>Login in</h1>
+            <h1>Log in</h1>
+            <h2 th:if="${!#strings.isEmpty(errorMessage)}" th:text="${errorMessage}"></h2>
             <form method="GET" id="loginForm" th:action="@{/login/signin}" th:object="${loginForm}">
                 <div><label for="username">Username:</label></div>
                 <input id="username" type="text" name="username" th:value="*{username}"/>
@@ -15,12 +16,6 @@
                 <div><input type="submit" value="Login"/>
                     <a href="#" th:href="@{/register}">[Go to Register]</a></div>
             </form>
-        </div>
-        <div th:if="${session.loggedIn == true}">
-            <div>
-                <p>Zalogowano jako użytkownik: <span th:text="*{session.loggedUser.name}">Sebastian</span>.</p>
-            </div>
-            <a href="#" class="button" th:href="@{/login/signout}">Wyloguj</a>
         </div>
     </main>
     <footer th:replace="fragments/footerFragment"></footer>

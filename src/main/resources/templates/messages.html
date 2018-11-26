@@ -10,12 +10,17 @@
                 <tr>
                     <th>Użytkownik</th>
                     <th>Wiadomość</th>
+                    <th>Zmodyfikowano</th>
                     <th></th>
                     <th></th>
                 </tr>
                 <tr data-th-each="message : ${messages}">
                     <td data-th-text="${message.user.name}">...</td>
                     <td data-th-text="${message.text}">...</td>
+                    <td th:unless="${#objects.nullSafe(message.modified, false) == false}"
+                        data-th-text="${#temporals.format(message.modified, 'dd-MM-yyy HH:mm:ss')}">...
+                    </td>
+                    <td th:if="${#objects.nullSafe(message.modified, false) == false}"></td>
                     <td>
                         <a class="btn"
                            th:classappend="${isAdmin} ? active : (${message.user.id} == ${loggedUserId} ? active : (${#lists.contains(allowedMessages, message)} ? active : disabled))"

@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html th:lang="pl-PL" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/headFragment"></head>
+<body>
+<div class="container mainContentContainer">
+    <header th:replace="fragments/navbarFragment"></header>
+    <main class="container">
+        <h2 th:if="${!#strings.isEmpty(errorMessage)}" th:text="${errorMessage}"></h2>
+        <h2 style="color: green;" th:if="${!#strings.isEmpty(successMessage)}" th:text="${successMessage}"></h2>
+        <div>
+            <p th:text="'Nieudane logowania: ' + ${session.invalidAttempts}"></p>
+        </div>
+        <div>
+            <p th:text="'Ostatnie logowanie: ' + ${#temporals.format(session.loggedUser.lastLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
+        </div>
+        <div>
+            <p th:text="'Ostatnia nieudana próba: ' + ${#temporals.format(session.loggedUser.lastInvalidLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
+        </div>
+        <form method="GET" id="lockForm" th:action="@{/user/lockSubmit}" th:object="${lockForm}">
+            <div><label for="attemptsToLock">Zablokuj po nieudanych próbach:</label></div>
+            <input id="attemptsToLock" type="number" name="attemptsToLock" th:value="*{attemptsToLock}"/>
+            <div><input type="submit" value="Zatwierdź"/></div>
+        </form>
+        <form method="GET" id="passwordChangeForm" th:action="@{/user/passwordSubmit}"
+              th:object="${passwordChangeForm}">
+            <div><label for="oldPassword">Hasło:</label></div>
+            <input id="oldPassword" type="oldPassword" name="oldPassword" th:value="*{oldPassword}"/>
+            <div><label for="newPassword">Nowe hasło:</label></div>
+            <input id="newPassword" type="password" name="newPassword" th:value="*{newPassword}"/>
+            <div><label for="newPasswordConfirm">Potwierdź hasło:</label></div>
+            <input id="newPasswordConfirm" type="password" name="newPasswordConfirm" th:value="*{newPasswordConfirm}"/>
+            <div><input type="submit" value="Zatwierdź"/></div>
+        </form>
+    </main>
+    <footer th:replace="fragments/footerFragment"></footer>
+</div>
+<div th:replace="fragments/scriptFragment"></div>
+</body>
+</html>

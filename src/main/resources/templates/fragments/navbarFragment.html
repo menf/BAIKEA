@@ -1,6 +1,12 @@
 <div class="container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="#">Strona Główna</a>
+        <div th:if="${session.loggedIn == true}">
+            <div>
+                <p>Zalogowano jako użytkownik: <span th:text="*{session.loggedUser.name}"></span>.</p>
+            </div>
+            <a href="#" class="button" th:href="@{/login/signout}">Wyloguj</a>
+        </div>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
