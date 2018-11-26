@@ -11,10 +11,14 @@
             <p th:text="'Nieudane logowania: ' + ${session.invalidAttempts}"></p>
         </div>
         <div>
-            <p th:text="'Ostatnie logowanie: ' + ${#temporals.format(session.loggedUser.lastLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
+            <p>Ostatnie logowanie:</p>
+            <p th:unless="${#objects.nullSafe(session.loggedUser.lastLogin, false) == false}"
+               th:text="${#temporals.format(session.loggedUser.lastLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
         </div>
         <div>
-            <p th:text="'Ostatnia nieudana próba: ' + ${#temporals.format(session.loggedUser.lastInvalidLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
+            <p>Ostatnia nieudana próba:</p>
+            <p th:unless="${#objects.nullSafe(session.loggedUser.lastInvalidLogin, false) == false}"
+               th:text="${#temporals.format(session.loggedUser.lastInvalidLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
         </div>
         <form method="GET" id="lockForm" th:action="@{/user/lockSubmit}" th:object="${lockForm}">
             <div><label for="attemptsToLock">Zablokuj po nieudanych próbach:</label></div>
@@ -24,7 +28,7 @@
         <form method="GET" id="passwordChangeForm" th:action="@{/user/passwordSubmit}"
               th:object="${passwordChangeForm}">
             <div><label for="oldPassword">Hasło:</label></div>
-            <input id="oldPassword" type="oldPassword" name="oldPassword" th:value="*{oldPassword}"/>
+            <input id="oldPassword" type="password" name="oldPassword" th:value="*{oldPassword}"/>
             <div><label for="newPassword">Nowe hasło:</label></div>
             <input id="newPassword" type="password" name="newPassword" th:value="*{newPassword}"/>
             <div><label for="newPasswordConfirm">Potwierdź hasło:</label></div>

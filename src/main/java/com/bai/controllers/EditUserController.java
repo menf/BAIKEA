@@ -53,12 +53,15 @@ public class EditUserController {
         }
         if (!user.getPasswordHash().equals(passwordChangeForm.getOldPassword()))
             model.addAttribute("errorMessage", "Incorrect password!");
-        if (!passwordChangeForm.getNewPassword().equals(passwordChangeForm.getNewPasswordConfirm()))
+        else if (!passwordChangeForm.getNewPassword().equals(passwordChangeForm.getNewPasswordConfirm()))
             model.addAttribute("errorMessage", "Passwords must match!");
-        user.setPasswordHash(passwordChangeForm.getNewPassword());
-        user = userService.createOrUpdate(user);
-        session().setAttribute("loggedUser", user);
-        model.addAttribute("successMessage", "Password changed!");
+        else {
+            user.setPasswordHash(passwordChangeForm.getNewPassword());
+            user = userService.createOrUpdate(user);
+            session().setAttribute("loggedUser", user);
+            model.addAttribute("successMessage", "Password changed!");
+        }
+
         model.addAttribute("lockForm", new UserAccountLockForm(user.getAttemptsToLock()));
         model.addAttribute("passwordChangeForm", new PasswordChangeForm());
         return "user";

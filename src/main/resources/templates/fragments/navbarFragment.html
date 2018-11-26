@@ -4,8 +4,8 @@
         <div th:if="${session.loggedIn == true}">
             <div>
                 <p>Zalogowano jako użytkownik: <span th:text="*{session.loggedUser.name}"></span>.</p>
+                <a href="#" class="button" th:href="@{/login/signout}">Wyloguj</a>
             </div>
-            <a href="#" class="button" th:href="@{/login/signout}">Wyloguj</a>
         </div>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
