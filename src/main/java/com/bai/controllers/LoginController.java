@@ -38,6 +38,8 @@ public class LoginController {
         HttpSession session = session();
         User user = userService.authenticate(loginForm.getUsername(), loginForm.getPassword());
         Optional<User> userExists = userService.getUserRepository().findUserByName(loginForm.getUsername());
+        if (isSessionLocked(model))
+            return "login";
         if (user == null) {
             if (userExists.isPresent() && isAccountLocked(userExists.get(), model))
                 return "login";
