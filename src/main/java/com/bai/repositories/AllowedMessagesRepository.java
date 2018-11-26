@@ -14,6 +14,8 @@ public interface AllowedMessagesRepository extends JpaRepository<AllowedMessages
 
     Optional<AllowedMessages> findByUserIdAndMessageId(int userId, int messageId);
 
+    List<AllowedMessages> findAllByMessageId(int messageId);
+
     void deleteByUserIdAndMessageId(int userId, int messageId);
 
 }

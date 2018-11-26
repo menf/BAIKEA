@@ -2,7 +2,6 @@ package com.bai.controllers;
 
 import com.bai.models.LoginForm;
 import com.bai.models.User;
-import com.bai.services.NotificationService;
 import com.bai.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,8 +18,6 @@ public class LoginController {
 
     @Autowired
     private UserService userService;
-    @Autowired
-    private NotificationService notifyService;
 
     @RequestMapping(method = RequestMethod.GET)
     public String login(Model model) {

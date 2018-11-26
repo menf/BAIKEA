@@ -1,7 +1,6 @@
 package com.bai.controllers;
 
 import com.bai.models.CreateUserForm;
-import com.bai.models.LoginForm;
 import com.bai.models.User;
 import com.bai.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

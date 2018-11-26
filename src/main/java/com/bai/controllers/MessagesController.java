@@ -55,7 +55,7 @@ public class MessagesController {
         return "redirect:/messages";
     }
 
-    @RequestMapping(value = "/remove", method = RequestMethod.GET)
+    @RequestMapping(value = "/delete", method = RequestMethod.GET)
     public String removeMessage(@RequestParam("messageId") int messageId, Model model) throws InvalidAttributeValueException, NoPermissionException {
         User user = (User) session().getAttribute("loggedUser");
         if (user == null)
@@ -66,6 +66,10 @@ public class MessagesController {
         Message message = messageResults.get();
         if (message.getUser().getId() != user.getId())
             throw new NoPermissionException("User " + user.getName() + " is not message owner.");
+        List<AllowedMessages> allowedMessages = messageService.getAllowedMessagesRepository().findAllByMessageId(messageId);
+        for (AllowedMessages allowedMessage : allowedMessages) {
+            messageService.getAllowedMessagesRepository().delete(allowedMessage);
+        }
         messageService.delete(messageId);
         return "redirect:/messages";
     }
@@ -94,9 +98,12 @@ public class MessagesController {
     @RequestMapping(value = "/edit/submit", method = RequestMethod.GET)
     public String editMessage(@ModelAttribute EditMessageForm editMessageForm,
                               Model model) throws NoPermissionException, InvalidAttributeValueException {
+        User loggedUser = (User) session().getAttribute("loggedUser");
+        if (loggedUser == null)
+            throw new NoPermissionException("Log in to edit messages");
         Optional<User> userResult = messageService.getUserRepository().findById(editMessageForm.getUserId());
         if (!userResult.isPresent())
-            throw new NoPermissionException("Log in to edit messages");
+            throw new NoPermissionException("User with id = " + editMessageForm.getUserId() + "does not exist.");
         Optional<Message> messageResult = messageService.getMessageRepository().findById(editMessageForm.getMessageId());
         if (!messageResult.isPresent())
             throw new InvalidAttributeValueException("Message with id = " + editMessageForm.getMessageId() + " does not exist.");
@@ -105,19 +112,21 @@ public class MessagesController {
         if (message.getUser().getId() != user.getId() && editMessageForm.getAllowedUserId().length > 0) {
             throw new NoPermissionException("Only owner can add permissions");
         }
-        for (int allowFor : editMessageForm.getAllowedUserId()) {
-            Optional<User> addUserResult = messageService.getUserRepository().findById(allowFor);
-            if (!addUserResult.isPresent())
-                throw new InvalidAttributeValueException("User with id = " + allowFor + " does not exist.");
-            User addUser = addUserResult.get();
-            AllowedMessages allowedMessages;
-            Optional<AllowedMessages> revokeMessage = messageService.getAllowedMessagesRepository().findByUserIdAndMessageId(allowFor, message.getId());
-            if (revokeMessage.isPresent()) {
-                allowedMessages = revokeMessage.get();
-                messageService.getAllowedMessagesRepository().delete(allowedMessages);
-            } else {
-                allowedMessages = new AllowedMessages(addUser, message);
-                messageService.getAllowedMessagesRepository().save(allowedMessages);
+        if (editMessageForm.getAllowedUserId() != null) {
+            for (int allowFor : editMessageForm.getAllowedUserId()) {
+                Optional<User> addUserResult = messageService.getUserRepository().findById(allowFor);
+                if (!addUserResult.isPresent())
+                    throw new InvalidAttributeValueException("User with id = " + allowFor + " does not exist.");
+                User addUser = addUserResult.get();
+                AllowedMessages allowedMessages;
+                Optional<AllowedMessages> revokeMessage = messageService.getAllowedMessagesRepository().findByUserIdAndMessageId(allowFor, message.getId());
+                if (revokeMessage.isPresent()) {
+                    allowedMessages = revokeMessage.get();
+                    messageService.getAllowedMessagesRepository().delete(allowedMessages);
+                } else {
+                    allowedMessages = new AllowedMessages(addUser, message);
+                    messageService.getAllowedMessagesRepository().save(allowedMessages);
+                }
             }
         }
         message.setText(editMessageForm.getMessageText());
