@@ -7,7 +7,7 @@
     <main class="container">
         <div th:unless="${session.loggedIn == true}">
             <h1>Login in</h1>
-            <form method="GET" th:action="@{/login/signin}" th:object="${loginForm}">
+            <form method="GET" id="loginForm" th:action="@{/login/signin}" th:object="${loginForm}">
                 <div><label for="username">Username:</label></div>
                 <input id="username" type="text" name="username" th:value="*{username}"/>
                 <div><label for="password" th:value="*{username}">Password:</label></div>
