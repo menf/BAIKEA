@@ -1,6 +1,7 @@
 package com.bai.services;
 
 import com.bai.models.User;
+import com.bai.repositories.InvalidLoginRepository;
 import com.bai.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,8 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private InvalidLoginRepository invalidLoginRepository;
 
     public User authenticate(String username, String password) {
         Optional<User> userResult = userRepository.findUserByName(username);
@@ -39,5 +42,17 @@ public class UserService {
 
     public UserRepository getUserRepository() {
         return userRepository;
+    }
+
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public InvalidLoginRepository getInvalidLoginRepository() {
+        return invalidLoginRepository;
+    }
+
+    public void setInvalidLoginRepository(InvalidLoginRepository invalidLoginRepository) {
+        this.invalidLoginRepository = invalidLoginRepository;
     }
 }

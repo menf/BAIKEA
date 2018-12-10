@@ -1,5 +1,6 @@
 package com.bai.controllers;
 
+import com.bai.models.InvalidLogin;
 import com.bai.models.LoginForm;
 import com.bai.models.LoginHashForm;
 import com.bai.models.User;
@@ -53,106 +54,78 @@ public class LoginController {
 
     @RequestMapping(value = "/signin", method = RequestMethod.GET)
     public String loginSubmit(@ModelAttribute LoginForm loginForm, Model model) {
-        HttpSession session = session();
         User user = userService.authenticate(loginForm.getUsername(), loginForm.getPassword());
         Optional<User> userExists = userService.getUserRepository().findUserByName(loginForm.getUsername());
-        if (isSessionLocked(model))
+        if (!userExists.isPresent()) {
+            handleInvalidLoginAttemptForNonExistentUser(loginForm, model);
             return "login";
+        }
         if (user == null) {
-            if (userExists.isPresent() && isAccountLocked(userExists.get(), model))
-                return "login";
-            return handleInvalidLoginAttempt(loginForm, model);
+            handleInvalidLoginAttemptForExistingUser(userExists.get(), loginForm, model);
+            return "login";
         }
-        if (user.getInvalidLoginAttempts() > 0) {
-            if (isAccountLocked(user, model))
-                return "login";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime unlockTime = user.getLastInvalidLogin().plusSeconds(user.getInvalidLoginAttempts() * 3);
+        long timeToUnlock = Duration.between(now, unlockTime).getSeconds();
+        if (now.isBefore(unlockTime)) {
+            model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");
+            return "login";
         }
+        if (user.getInvalidLoginAttempts() >= user.getAttemptsToLock() && user.getAttemptsToLock() > 0) {
+            model.addAttribute("errorMessage", "Account locked. Please contact administrator.");
+            return "login";
+        }
+        HttpSession session = session();
         session.setAttribute("invalidAttempts", user.getInvalidLoginAttempts());
         user.setInvalidLoginAttempts(0);
         user.setLastLogin(LocalDateTime.now());
         user = userService.createOrUpdate(user);
         session.setAttribute("loggedUser", user);
         session.setAttribute("loggedIn", true);
-        session.setAttribute("sessionInvalidAttempts", 0);
         return "redirect:/messages";
     }
 
-    private String handleInvalidLoginAttempt(LoginForm loginForm, Model model) {
-        User user = userService.findByName(loginForm.getUsername());
-        String errorMessage = "Wrong username or password!";
-        int attemptsToLock = user == null ? 0 : user.getAttemptsToLock();
-        if (user == null) {
-            if (isSessionLocked(model))
-                return "login";
-            session().setAttribute("lastInvalidAttempt", LocalDateTime.now());
-            int invalidAttempts = session().getAttribute("sessionInvalidAttempts") == null ? 0 : (int) session().getAttribute("sessionInvalidAttempts");
-            invalidAttempts++;
-            session().setAttribute("sessionInvalidAttempts", invalidAttempts);
-            errorMessage = "Wrong username or password! Try again in " + getWaitDuration(invalidAttempts) + " seconds";
-        } else if ((user.getInvalidLoginAttempts() <= attemptsToLock && attemptsToLock > 0) || user.getAttemptsToLock() == 0) {
-            user.setInvalidLoginAttempts(user.getInvalidLoginAttempts() + 1);
-            user.setLastInvalidLogin(LocalDateTime.now());
-            user = userService.createOrUpdate(user);
-            if (isAccountLockedBool(user, model))
-                errorMessage = "Account locked, contact administrator!";
-            else
-                errorMessage = "Wrong username or password! Try again in " + getWaitDuration(user) + " seconds";
+    private void handleInvalidLoginAttemptForNonExistentUser(LoginForm loginForm, Model model) {
+        Optional<InvalidLogin> invalidLoginResult = userService.getInvalidLoginRepository().findByUsername(loginForm.getUsername());
+        InvalidLogin invalidLogin;
+        if (!invalidLoginResult.isPresent()) {
+            invalidLogin = logInvalidLoginAttempt(new InvalidLogin(loginForm.getUsername()));
+            long timeToUnlock = Duration.between(LocalDateTime.now(), invalidLogin.getLastAttempt().plusSeconds(invalidLogin.getAttempts() * 3)).getSeconds();
+            model.addAttribute("errorMessage", "Invalid username or password. Try again in " + timeToUnlock + " seconds.");
+            return;
         }
-        model.addAttribute("errorMessage", errorMessage);
-        return "login";
-    }
-
-    private boolean isAccountLocked(User user, Model model) {
-        String errorMessage = "Account locked, contact administrator!";
-        if (user.getInvalidLoginAttempts() < user.getAttemptsToLock() || user.getAttemptsToLock() == 0) {
-            if (LocalDateTime.now().isAfter(user.getLastInvalidLogin().plusSeconds(getWaitTime(user))))
-                return false;
-            errorMessage = "Account locked. Try again in " + getWaitDuration(user) + " seconds";
+        invalidLogin = invalidLoginResult.get();
+        long timeToUnlock = Duration.between(LocalDateTime.now(), invalidLogin.getLastAttempt().plusSeconds(invalidLogin.getAttempts() * 3)).getSeconds();
+        if (timeToUnlock > 0) {
+            model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");
+            return;
         }
-        model.addAttribute("errorMessage", errorMessage);
-        return true;
+        invalidLogin = logInvalidLoginAttempt(invalidLogin);
+        timeToUnlock = Duration.between(LocalDateTime.now(), invalidLogin.getLastAttempt().plusSeconds(invalidLogin.getAttempts() * 3)).getSeconds();
+        model.addAttribute("errorMessage", "Invalid username or password. Try again in " + timeToUnlock + " seconds.");
     }
 
-    private boolean isAccountLockedBool(User user, Model model) {
-        String errorMessage = "";
-        if (user.getInvalidLoginAttempts() < user.getAttemptsToLock() || user.getAttemptsToLock() == 0) {
-            if (LocalDateTime.now().isAfter(user.getLastInvalidLogin().plusSeconds(getWaitTime(user))))
-                return false;
-            errorMessage = "Account locked. Try again in " + getWaitDuration(user) + " seconds";
+    private InvalidLogin logInvalidLoginAttempt(InvalidLogin invalidLogin) {
+        invalidLogin.setLastAttempt(LocalDateTime.now());
+        invalidLogin.setAttempts(invalidLogin.getAttempts() + 1);
+        return userService.getInvalidLoginRepository().save(invalidLogin);
+    }
+
+    private void handleInvalidLoginAttemptForExistingUser(User user, LoginForm loginForm, Model model) {
+        long timeToUnlock = Duration.between(LocalDateTime.now(), user.getLastInvalidLogin().plusSeconds(user.getInvalidLoginAttempts() * 3)).getSeconds();
+        if (timeToUnlock > 0) {
+            model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");
+            return;
         }
-        model.addAttribute("errorMessage", errorMessage);
-        return true;
-    }
-
-    private boolean isSessionLocked(Model model) {
-        String errorMessage = "";
-        int invalidAttempts = session().getAttribute("sessionInvalidAttempts") == null ? 0 : (int) session().getAttribute("sessionInvalidAttempts");
-        LocalDateTime lastInvalidTry = (LocalDateTime) session().getAttribute("lastInvalidAttempt");
-        if (lastInvalidTry == null)
-            return false;
-        if (invalidAttempts > 0) {
-            if (LocalDateTime.now().isAfter(lastInvalidTry.plusSeconds(getWaitTime(invalidAttempts))))
-                return false;
-            errorMessage = "Account locked. Try again in " + getWaitDuration(invalidAttempts) + " seconds";
+        if (user.getAttemptsToLock() > 0 && user.getInvalidLoginAttempts() >= user.getAttemptsToLock()) {
+            model.addAttribute("errorMessage", "Account locked. Please contact administrator.");
+            return;
         }
-        model.addAttribute("errorMessage", errorMessage);
-        return true;
-    }
-
-    private long getWaitDuration(User user) {
-        return Duration.between(LocalDateTime.now(), user.getLastInvalidLogin().plusSeconds(getWaitTime(user))).getSeconds();
-    }
-
-    private long getWaitDuration(int invalidAttempts) {
-        return Duration.between(LocalDateTime.now(), ((LocalDateTime) session().getAttribute("lastInvalidAttempt")).plusSeconds(getWaitTime(invalidAttempts))).getSeconds();
-    }
-
-    private long getWaitTime(User user) {
-        return user.getInvalidLoginAttempts() * 3;
-    }
-
-    private long getWaitTime(int invalidAttempts) {
-        return invalidAttempts * 3;
+        user.setInvalidLoginAttempts(user.getInvalidLoginAttempts() + 1);
+        user.setLastInvalidLogin(LocalDateTime.now());
+        user = userService.getUserRepository().save(user);
+        timeToUnlock = Duration.between(LocalDateTime.now(), user.getLastInvalidLogin().plusSeconds(user.getInvalidLoginAttempts() * 3)).getSeconds();
+        model.addAttribute("errorMessage", "Invalid username or password. Try again in " + timeToUnlock + " seconds.");
     }
 
     @RequestMapping(value = "/signout", method = RequestMethod.GET)

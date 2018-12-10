@@ -79,8 +79,12 @@ public class EditUserController {
                 model.addAttribute("isLoggedIn", true);
             return "login";
         }
-        if (userAccountLockForm.getAttemptsToLock() < 0)
+        if (userAccountLockForm.getAttemptsToLock() < 0) {
             model.addAttribute("errorMessage", "Invalid value!");
+            model.addAttribute("lockForm", new UserAccountLockForm(user.getAttemptsToLock()));
+            model.addAttribute("passwordChangeForm", new PasswordChangeForm());
+            return "user";
+        }
         user.setAttemptsToLock(userAccountLockForm.getAttemptsToLock());
         user = userService.createOrUpdate(user);
         session().setAttribute("loggedUser", user);
