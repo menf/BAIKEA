@@ -1,6 +1,6 @@
 <div class="container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Strona Główna</a>
+        <a class="navbar-brand" href="/">Strona Główna</a>
         <div th:if="${session.loggedIn == true}">
             <div>
                 <p>Zalogowano jako użytkownik: <span th:text="*{session.loggedUser.name}"></span>.</p>
@@ -13,8 +13,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/login/hash">Login Hash</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/register">Rejestracja</a>

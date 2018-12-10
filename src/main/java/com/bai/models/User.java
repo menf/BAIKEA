@@ -14,7 +14,7 @@ public class User implements Serializable {
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
     @Column(name = "PASSWORD_HASH", nullable = false)
-    private String passwordHash;
+    private String password;
     @Column(name = "LAST_LOGIN")
     private LocalDateTime lastLogin;
     @Column(name = "LAST_INVALID_LOGIN")
@@ -31,14 +31,14 @@ public class User implements Serializable {
     protected User() {
     }
 
-    public User(String name, String passwordHash) {
+    public User(String name, String password) {
         this.name = name;
-        this.passwordHash = passwordHash;
+        this.password = password;
     }
 
-    public User(String name, String passwordHash, LocalDateTime lastLogin) {
+    public User(String name, String password, LocalDateTime lastLogin) {
         this.name = name;
-        this.passwordHash = passwordHash;
+        this.password = password;
         this.lastLogin = lastLogin;
     }
 
@@ -58,12 +58,12 @@ public class User implements Serializable {
         this.name = name;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public LocalDateTime getLastLogin() {
@@ -117,6 +117,6 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("User[id=%d, name='%s', passwordHash='%s', lastLogin='%s']", id, name, passwordHash, lastLogin);
+        return String.format("User[id=%d, name='%s', password='%s', lastLogin='%s']", id, name, password, lastLogin);
     }
 }

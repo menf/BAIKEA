@@ -51,12 +51,12 @@ public class EditUserController {
                 model.addAttribute("isLoggedIn", true);
             return "login";
         }
-        if (!user.getPasswordHash().equals(passwordChangeForm.getOldPassword()))
+        if (!user.getPassword().equals(passwordChangeForm.getOldPassword()))
             model.addAttribute("errorMessage", "Incorrect password!");
         else if (!passwordChangeForm.getNewPassword().equals(passwordChangeForm.getNewPasswordConfirm()))
             model.addAttribute("errorMessage", "Passwords must match!");
         else {
-            user.setPasswordHash(passwordChangeForm.getNewPassword());
+            user.setPassword(passwordChangeForm.getNewPassword());
             user = userService.createOrUpdate(user);
             session().setAttribute("loggedUser", user);
             model.addAttribute("successMessage", "Password changed!");

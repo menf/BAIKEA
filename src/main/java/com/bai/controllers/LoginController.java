@@ -1,8 +1,10 @@
 package com.bai.controllers;
 
 import com.bai.models.LoginForm;
+import com.bai.models.LoginHashForm;
 import com.bai.models.User;
 import com.bai.services.UserService;
+import com.bai.utils.LoginUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,6 +33,22 @@ public class LoginController {
         if (session.getAttribute("loggedUser") != null)
             return "redirect:/user";
         return "login";
+    }
+
+    @RequestMapping(value = "/hash", method = RequestMethod.GET)
+    public String loginHash(@ModelAttribute LoginHashForm loginHashForm, Model model) {
+        HttpSession session = session();
+        if (session.getAttribute("loggedUser") != null)
+            return "redirect:/user";
+        if (loginHashForm == null)
+            loginHashForm = new LoginHashForm();
+        Optional<User> userResult = userService.getUserRepository().findUserByName(loginHashForm.getUsername());
+        if (!userResult.isPresent())
+            loginHashForm.setMask(LoginUtils.DEFAULT_MASK);
+        else
+            loginHashForm.setMask(LoginUtils.generateMask(userResult.get()));
+        model.addAttribute("loginHashForm", loginHashForm);
+        return "loginHash";
     }
 
     @RequestMapping(value = "/signin", method = RequestMethod.GET)
@@ -75,7 +93,7 @@ public class LoginController {
             user.setInvalidLoginAttempts(user.getInvalidLoginAttempts() + 1);
             user.setLastInvalidLogin(LocalDateTime.now());
             user = userService.createOrUpdate(user);
-            if (isAccountLocked(user, model))
+            if (isAccountLockedBool(user, model))
                 errorMessage = "Account locked, contact administrator!";
             else
                 errorMessage = "Wrong username or password! Try again in " + getWaitDuration(user) + " seconds";
@@ -86,6 +104,17 @@ public class LoginController {
 
     private boolean isAccountLocked(User user, Model model) {
         String errorMessage = "Account locked, contact administrator!";
+        if (user.getInvalidLoginAttempts() < user.getAttemptsToLock() || user.getAttemptsToLock() == 0) {
+            if (LocalDateTime.now().isAfter(user.getLastInvalidLogin().plusSeconds(getWaitTime(user))))
+                return false;
+            errorMessage = "Account locked. Try again in " + getWaitDuration(user) + " seconds";
+        }
+        model.addAttribute("errorMessage", errorMessage);
+        return true;
+    }
+
+    private boolean isAccountLockedBool(User user, Model model) {
+        String errorMessage = "";
         if (user.getInvalidLoginAttempts() < user.getAttemptsToLock() || user.getAttemptsToLock() == 0) {
             if (LocalDateTime.now().isAfter(user.getLastInvalidLogin().plusSeconds(getWaitTime(user))))
                 return false;

@@ -18,7 +18,7 @@ public class UserService {
         if (!userResult.isPresent())
             return null;
         User user = userResult.get();
-        if (password.equals(user.getPasswordHash()))
+        if (password.equals(user.getPassword()))
             return user;
         return null;
     }

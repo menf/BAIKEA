@@ -110,7 +110,10 @@ public class MessagesController {
             throw new InvalidAttributeValueException("Message with id = " + editMessageForm.getMessageId() + " does not exist.");
         Message message = messageResult.get();
         User user = userResult.get();
-        if (message.getUser().getId() != user.getId() && editMessageForm.getAllowedUserId().length > 0) {
+        List<Message> allowedMessages = messageService.findAllowedMessages(loggedUser.getId());
+        if (!allowedMessages.contains(message) && message.getUser().getId() != loggedUser.getId())
+            throw new NoPermissionException("No edit permissions!");
+        if (message.getUser().getId() != loggedUser.getId() && editMessageForm.getAllowedUserId().length > 0) {
             throw new NoPermissionException("Only owner can add permissions");
         }
         if (editMessageForm.getAllowedUserId() != null) {
@@ -119,14 +122,14 @@ public class MessagesController {
                 if (!addUserResult.isPresent())
                     throw new InvalidAttributeValueException("User with id = " + allowFor + " does not exist.");
                 User addUser = addUserResult.get();
-                AllowedMessages allowedMessages;
+                AllowedMessages allowedMessagesToAdd;
                 Optional<AllowedMessages> revokeMessage = messageService.getAllowedMessagesRepository().findByUserIdAndMessageId(allowFor, message.getId());
                 if (revokeMessage.isPresent()) {
-                    allowedMessages = revokeMessage.get();
-                    messageService.getAllowedMessagesRepository().delete(allowedMessages);
+                    allowedMessagesToAdd = revokeMessage.get();
+                    messageService.getAllowedMessagesRepository().delete(allowedMessagesToAdd);
                 } else {
-                    allowedMessages = new AllowedMessages(addUser, message);
-                    messageService.getAllowedMessagesRepository().save(allowedMessages);
+                    allowedMessagesToAdd = new AllowedMessages(addUser, message);
+                    messageService.getAllowedMessagesRepository().save(allowedMessagesToAdd);
                 }
             }
         }
