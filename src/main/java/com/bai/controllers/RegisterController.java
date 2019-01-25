@@ -32,12 +32,18 @@ public class RegisterController {
             model.addAttribute("errorMessage", "User already exists");
             return "/register";
         }
+        int passwordLength = createForm.getPassword().length();
+        if (!(passwordLength >= 8 && passwordLength <= 16)) {
+            model.addAttribute("invalidData", true);
+            model.addAttribute("errorMessage", "Password length must be 8-16 characters.");
+            return "/register";
+        }
         if (!createForm.getPassword().equals(createForm.getPasswordConfirm())) {
             model.addAttribute("invalidData", true);
             model.addAttribute("errorMessage", "Passwords must match.");
             return "/register";
         }
-        userService.createOrUpdate(createForm.getUsername(), createForm.getPassword());
+        userService.createUser(createForm.getUsername(), createForm.getPassword());
         return "redirect:/login";
     }
 

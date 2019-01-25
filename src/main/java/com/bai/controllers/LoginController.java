@@ -1,13 +1,11 @@
 package com.bai.controllers;
 
-import com.bai.models.InvalidLogin;
-import com.bai.models.LoginForm;
-import com.bai.models.LoginHashForm;
-import com.bai.models.User;
+import com.bai.models.*;
 import com.bai.services.UserService;
-import com.bai.utils.LoginUtils;
+import com.bai.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +15,8 @@ import javax.servlet.http.HttpSession;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Stream;
 
 import static com.bai.utils.SessionUtil.session;
 
@@ -37,7 +37,7 @@ public class LoginController {
     }
 
     @RequestMapping(value = "/hash", method = RequestMethod.GET)
-    public String loginHash(@ModelAttribute LoginHashForm loginHashForm, Model model) {
+    public String hashLoginUserSelect(@ModelAttribute LoginHashForm loginHashForm, Model model) {
         HttpSession session = session();
         if (session.getAttribute("loggedUser") != null)
             return "redirect:/user";
@@ -45,11 +45,55 @@ public class LoginController {
             loginHashForm = new LoginHashForm();
         Optional<User> userResult = userService.getUserRepository().findUserByName(loginHashForm.getUsername());
         if (!userResult.isPresent())
-            loginHashForm.setMask(LoginUtils.DEFAULT_MASK);
+            loginHashForm.setMask(PasswordUtils.DEFAULT_MASK);
         else
-            loginHashForm.setMask(LoginUtils.generateMask(userResult.get()));
+            loginHashForm.setMask(userService.getUserCurrentMask(userResult.get()));
         model.addAttribute("loginHashForm", loginHashForm);
         return "loginHash";
+    }
+
+    @RequestMapping(value = "/hash/submit", method = RequestMethod.GET)
+    @Transactional
+    public String hashLoginSubmit(@ModelAttribute LoginHashForm loginHashForm, Model model) {
+        HttpSession session = session();
+        if (session.getAttribute("loggedUser") != null)
+            return "redirect:/user";
+        if (loginHashForm == null)
+            loginHashForm = new LoginHashForm();
+        Optional<User> userResult = userService.getUserRepository().findUserByName(loginHashForm.getUsername());
+        if (!userResult.isPresent()) {
+            loginHashForm.setMask(PasswordUtils.DEFAULT_MASK);
+            handleInvalidLoginAttemptForNonExistentUser(new LoginForm(loginHashForm.getUsername()), model);
+            model.addAttribute("loginHashForm", loginHashForm);
+            return "loginHash";
+        }
+        loginHashForm.setMask(userService.getUserCurrentMask(userResult.get()));
+        model.addAttribute("loginHashForm", loginHashForm);
+        User user = userService.authenticateHashLogin(loginHashForm.getUsername(), loginHashForm.getPassword());
+        if (user == null) {
+            handleInvalidLoginAttemptForExistingUser(userResult.get(), model);
+            return "loginHash";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime unlockTime = user.getLastInvalidLogin().plusSeconds(user.getInvalidLoginAttempts() * 3);
+        long timeToUnlock = Duration.between(now, unlockTime).getSeconds();
+        if (now.isBefore(unlockTime)) {
+            model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");
+            return "loginHash";
+        }
+        if (user.getInvalidLoginAttempts() >= user.getAttemptsToLock() && user.getAttemptsToLock() > 0) {
+            model.addAttribute("errorMessage", "Account locked. Please contact administrator.");
+            return "loginHash";
+        }
+        session.setAttribute("invalidAttempts", user.getInvalidLoginAttempts());
+        session.setAttribute("lastLogin", user.getLastLogin());
+        user.setInvalidLoginAttempts(0);
+        user.setLastLogin(LocalDateTime.now());
+        user = userService.updateUser(user);
+        session.setAttribute("loggedUser", user);
+        session.setAttribute("loggedIn", true);
+        userService.updatePartialPasswordMask(user);
+        return "redirect:/messages";
     }
 
     @RequestMapping(value = "/signin", method = RequestMethod.GET)
@@ -61,7 +105,7 @@ public class LoginController {
             return "login";
         }
         if (user == null) {
-            handleInvalidLoginAttemptForExistingUser(userExists.get(), loginForm, model);
+            handleInvalidLoginAttemptForExistingUser(userExists.get(), model);
             return "login";
         }
         LocalDateTime now = LocalDateTime.now();
@@ -77,9 +121,10 @@ public class LoginController {
         }
         HttpSession session = session();
         session.setAttribute("invalidAttempts", user.getInvalidLoginAttempts());
+        session.setAttribute("lastLogin", user.getLastLogin());
         user.setInvalidLoginAttempts(0);
         user.setLastLogin(LocalDateTime.now());
-        user = userService.createOrUpdate(user);
+        user = userService.updateUser(user);
         session.setAttribute("loggedUser", user);
         session.setAttribute("loggedIn", true);
         return "redirect:/messages";
@@ -89,7 +134,10 @@ public class LoginController {
         Optional<InvalidLogin> invalidLoginResult = userService.getInvalidLoginRepository().findByUsername(loginForm.getUsername());
         InvalidLogin invalidLogin;
         if (!invalidLoginResult.isPresent()) {
-            invalidLogin = logInvalidLoginAttempt(new InvalidLogin(loginForm.getUsername()));
+            InvalidLogin newInvalidLogin = new InvalidLogin(loginForm.getUsername());
+            int invalidAttempts = Math.abs(new Random().nextInt() % 5);
+            newInvalidLogin.setLockAttempt(invalidAttempts);
+            invalidLogin = logInvalidLoginAttempt(newInvalidLogin);
             long timeToUnlock = Duration.between(LocalDateTime.now(), invalidLogin.getLastAttempt().plusSeconds(invalidLogin.getAttempts() * 3)).getSeconds();
             model.addAttribute("errorMessage", "Invalid username or password. Try again in " + timeToUnlock + " seconds.");
             return;
@@ -98,6 +146,10 @@ public class LoginController {
         long timeToUnlock = Duration.between(LocalDateTime.now(), invalidLogin.getLastAttempt().plusSeconds(invalidLogin.getAttempts() * 3)).getSeconds();
         if (timeToUnlock > 0) {
             model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");
+            return;
+        }
+        if (invalidLogin.getAttempts() >= invalidLogin.getLockAttempt() && invalidLogin.getLockAttempt() > 0) {
+            model.addAttribute("errorMessage", "Account locked. Please contact administrator.");
             return;
         }
         invalidLogin = logInvalidLoginAttempt(invalidLogin);
@@ -111,7 +163,7 @@ public class LoginController {
         return userService.getInvalidLoginRepository().save(invalidLogin);
     }
 
-    private void handleInvalidLoginAttemptForExistingUser(User user, LoginForm loginForm, Model model) {
+    private void handleInvalidLoginAttemptForExistingUser(User user, Model model) {
         long timeToUnlock = Duration.between(LocalDateTime.now(), user.getLastInvalidLogin().plusSeconds(user.getInvalidLoginAttempts() * 3)).getSeconds();
         if (timeToUnlock > 0) {
             model.addAttribute("errorMessage", "Account locked. Try again in " + timeToUnlock + " seconds.");

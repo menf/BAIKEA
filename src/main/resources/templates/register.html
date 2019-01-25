@@ -9,8 +9,10 @@
         <form method="GET" th:action="@{/register/submit}" th:object="${createForm}">
             <div><label for="username">Username:</label></div>
             <input id="username" type="text" name="username" th:value="*{username}"/>
+            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Długość loginu: [2...80]</p>
             <div><label for="password">Password:</label></div>
             <input id="password" type="password" name="password" th:value="*{password}"/>
+            <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Długość hasła: [8...16]</p>
             <div><label for="passwordConfirm">Confirm Password:</label></div>
             <input id="passwordConfirm" type="password" name="passwordConfirm" th:value="*{passwordConfirm}"/>
             <div><input type="submit" value="Register"/></div>

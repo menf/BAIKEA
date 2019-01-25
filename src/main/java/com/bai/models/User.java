@@ -13,8 +13,12 @@ public class User implements Serializable {
     private int id;
     @Column(name = "NAME", nullable = false, unique = true)
     private String name;
-    @Column(name = "PASSWORD_HASH", nullable = false)
+    @Column(name = "PASSWORD", nullable = false)
     private String password;
+    @Column(name = "PASSWORD_HASH", nullable = false)
+    private String passwordHash;
+    @Column(name = "SALT", nullable = false)
+    private String salt;
     @Column(name = "LAST_LOGIN")
     private LocalDateTime lastLogin;
     @Column(name = "LAST_INVALID_LOGIN")
@@ -23,10 +27,6 @@ public class User implements Serializable {
     private int invalidLoginAttempts;
     @Column(name = "ATTEMPTS_TO_LOCK")
     private int attemptsToLock;
-    @Column(name = "SECRET_QUESTION")
-    private String secretQuestion;
-    @Column(name = "SECRET_ANSWER")
-    private String secretAnswer;
 
     protected User() {
     }
@@ -98,22 +98,21 @@ public class User implements Serializable {
         this.attemptsToLock = attemptsToLock;
     }
 
-    public String getSecretQuestion() {
-        return secretQuestion;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setSecretQuestion(String secretQuestion) {
-        this.secretQuestion = secretQuestion;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
-    public String getSecretAnswer() {
-        return secretAnswer;
+    public String getSalt() {
+        return salt;
     }
 
-    public void setSecretAnswer(String secretAnswer) {
-        this.secretAnswer = secretAnswer;
+    public void setSalt(String salt) {
+        this.salt = salt;
     }
-
 
     @Override
     public String toString() {

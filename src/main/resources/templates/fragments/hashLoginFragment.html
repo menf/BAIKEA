@@ -1,0 +1,24 @@
+<div th:unless="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}">
+    <label for="username">Username:</label></div>
+<div>
+    <input th:unless="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}"
+           id="username" type="text" name="username" th:value="${loginHashForm.username}"/>
+    <input th:if="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}"
+           id="username" type="text" name="username" th:value="${loginHashForm.username}" hidden/>
+    <div class="d-flex flex-row">
+        <div th:if="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}"
+             th:each="i : ${#numbers.sequence(0,15)}">
+            <div><label th:for="'password['+${i}+']'" th:text="${i + 1}"></label></div>
+            <input th:unless="${loginHashForm.mask[i] == false}" class="form-control"
+                   style="margin: 2px;" maxlength="1" th:id="'password'+${i}" type="password"
+                   th:name="'password['+${i}+']'"
+                   th:value="${loginHashForm.password[i]}"/>
+            <input th:if="${loginHashForm.mask[i] == false}" disabled class="form-control"
+                   style="margin: 2px;" maxlength="1" th:id="'password'+${i}" type="password"
+                   th:name="'password['+${i}+']'"
+                   th:value="${loginHashForm.password[i]}"/>
+        </div>
+    </div>
+</div>
+<div><input type="submit" value="Login"/>
+    <a href="#" th:href="@{/register}">[Go to Register]</a></div>

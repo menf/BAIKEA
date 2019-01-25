@@ -57,7 +57,7 @@ public class EditUserController {
             model.addAttribute("errorMessage", "Passwords must match!");
         else {
             user.setPassword(passwordChangeForm.getNewPassword());
-            user = userService.createOrUpdate(user);
+            user = userService.updateUserPassword(user);
             session().setAttribute("loggedUser", user);
             model.addAttribute("successMessage", "Password changed!");
         }
@@ -86,7 +86,7 @@ public class EditUserController {
             return "user";
         }
         user.setAttemptsToLock(userAccountLockForm.getAttemptsToLock());
-        user = userService.createOrUpdate(user);
+        user = userService.updateUser(user);
         session().setAttribute("loggedUser", user);
         model.addAttribute("successMessage", "Invalid login attempts changed!");
         model.addAttribute("lockForm", new UserAccountLockForm(user.getAttemptsToLock()));

@@ -12,8 +12,8 @@
         </div>
         <div>
             <p>Ostatnie logowanie:</p>
-            <p th:unless="${#objects.nullSafe(session.loggedUser.lastLogin, false) == false}"
-               th:text="${#temporals.format(session.loggedUser.lastLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
+            <p th:unless="${#objects.nullSafe(session.lastLogin, false) == false}"
+               th:text="${#temporals.format(session.lastLogin, 'dd-MM-yyy HH:mm:ss')}"></p>
         </div>
         <div>
             <p>Ostatnia nieudana próba:</p>

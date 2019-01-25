@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html th:lang="pl-PL" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/headFragment"></head>
+<body>
+<div class="container mainContentContainer">
+    <header th:replace="fragments/navbarFragment"></header>
+    <main class="container">
+        <div th:unless="${session.loggedIn == true}">
+            <h1>Log in</h1>
+            <h2 th:if="${!#strings.isEmpty(errorMessage)}" th:text="${errorMessage}"></h2>
+            <div th:unless="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}">
+                <div th:replace="fragments/hashLoginUserSelectFragment"></div>
+            </div>
+            <div th:if="${loginHashForm.username!=null and #strings.length(loginHashForm.username) > 0}">
+                <div th:replace="fragments/hashLoginPasswordFragment"></div>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="fragments/footerFragment"></footer>
+</div>
+<div th:replace="fragments/scriptFragment"></div>
+</body>
+</html><!DOCTYPE html>

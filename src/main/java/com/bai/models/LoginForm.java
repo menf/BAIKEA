@@ -4,12 +4,21 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 public class LoginForm {
-    @Size(min = 2, max = 80, message = "Długość loginu: [2...80]")
+
+    @NotNull
+    @Size(min = 2, max = 80)
     private String username;
 
     @NotNull
-    @Size(min = 1, max = 50)
+    @Size(min = 8, max = 16)
     private String password;
+
+    public LoginForm() {
+    }
+
+    public LoginForm(String username) {
+        this.username = username;
+    }
 
     public String getUsername() {
         return username;
