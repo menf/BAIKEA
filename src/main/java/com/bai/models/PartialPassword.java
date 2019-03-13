@@ -21,6 +21,8 @@ public class PartialPassword implements Serializable {
     private boolean current;
     @Column(name = "LAST_USED")
     private LocalDateTime lastUsed;
+    @Column(name = "PASSWORD")
+    private String password;
 
     protected PartialPassword() {
     }
@@ -40,6 +42,13 @@ public class PartialPassword implements Serializable {
         this.user = user;
         this.mask = mask;
         this.current = current;
+    }
+
+    public PartialPassword(User user, String mask, LocalDateTime lastUsed, String password) {
+        this.user = user;
+        this.mask = mask;
+        this.lastUsed = lastUsed;
+        this.password = password;
     }
 
     public int getId() {
@@ -80,5 +89,13 @@ public class PartialPassword implements Serializable {
 
     public void setLastUsed(LocalDateTime lastUsed) {
         this.lastUsed = lastUsed;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

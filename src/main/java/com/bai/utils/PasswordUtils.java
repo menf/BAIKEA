@@ -1,11 +1,10 @@
 package com.bai.utils;
 
 import com.bai.models.User;
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -47,7 +46,7 @@ public class PasswordUtils {
 
     private static boolean[] generateMask(User user) {
         Random random = new Random();
-        String password = hasHashedPassword(user) ? getDecodedPassword(user) : user.getPassword();
+        String password = user.getPassword();
         int passwordLength = password.length();
         int maxChars = Math.max(password.length() / 2, 5);
         int minChars = 5;
@@ -63,29 +62,18 @@ public class PasswordUtils {
         return mask;
     }
 
-    private static boolean hasHashedPassword(User user) {
-        return user.getPasswordHash() != null && user.getSalt() != null;
+    public static String getPartialPassword(String password, String mask) {
+        StringBuilder builder = new StringBuilder();
+        boolean[] booleanMask = maskToBooleanArray(mask);
+        for (int i = 0; i < booleanMask.length; i++) {
+            if (booleanMask[i])
+                builder.append(password.charAt(i));
+        }
+        return builder.toString();
     }
 
     public static String hashPassword(User user) {
-        return hashPassword(user.getPassword(), user.getSalt());
-    }
-
-    private static String hashPassword(String password, String salt) {
-        return Base64.encodeBase64String((password + salt).getBytes());
-    }
-
-    public static String getDecodedPassword(User user) {
-        return getDecodedPassword(user.getPasswordHash(), user.getSalt());
-    }
-
-    private static String getDecodedPassword(String hashedPassword, String salt) {
-        String decoded = unHashPassword(hashedPassword);
-        return decoded.substring(0, decoded.indexOf(salt));
-    }
-
-    private static String unHashPassword(String hashedPassword) {
-        return new String(Base64.decodeBase64(hashedPassword), StandardCharsets.UTF_8);
+        return DigestUtils.md5Hex(user.getPassword() + user.getSalt()).toUpperCase();
     }
 
     public static String generateSalt() {

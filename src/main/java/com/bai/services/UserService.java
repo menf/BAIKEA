@@ -6,11 +6,14 @@ import com.bai.repositories.InvalidLoginRepository;
 import com.bai.repositories.PartialPasswordRepository;
 import com.bai.repositories.UserRepository;
 import com.bai.utils.PasswordUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,10 +45,15 @@ public class UserService {
         if (!userResult.isPresent())
             return null;
         User user = userResult.get();
-        String decodedPassword = PasswordUtils.getDecodedPassword(user);
         PartialPassword partialPassword = partialPasswordRepository.findByUserIdAndCurrentTrue(user.getId()).get();
-        boolean passwordMatchesMask = passwordMatchMask(decodedPassword, password, partialPassword.getMask());
-        if (!passwordMatchesMask)
+        String pass = Arrays.stream(password).map(c -> {
+            if (!StringUtils.isEmpty(c))
+                return "" + c.charAt(0);
+            else
+                return "";
+        }).collect(Collectors.joining());
+        String hashedFragment = DigestUtils.md5Hex(pass + user.getSalt()).toUpperCase();
+        if (!hashedFragment.equals(partialPassword.getPassword()))
             return null;
         return user;
     }
@@ -101,7 +109,7 @@ public class UserService {
     private void createPartialPasswords(User user) {
         List<String> masks = PasswordUtils.generateMasksForUser(user, 10);
         List<PartialPassword> partialPasswords = masks.stream()
-                .map(mask -> new PartialPassword(user, mask, LocalDateTime.now()))
+                .map(mask -> new PartialPassword(user, mask, LocalDateTime.now(), DigestUtils.md5Hex(PasswordUtils.getPartialPassword(user.getPassword(), mask) + user.getSalt()).toUpperCase()))
                 .collect(Collectors.toList());
         partialPasswords.get(0).setCurrent(true);
         partialPasswordRepository.saveAll(partialPasswords);

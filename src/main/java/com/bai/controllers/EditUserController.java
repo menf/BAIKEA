@@ -51,11 +51,15 @@ public class EditUserController {
                 model.addAttribute("isLoggedIn", true);
             return "login";
         }
+        int newPasswordLength = passwordChangeForm.getNewPassword().length();
         if (!user.getPassword().equals(passwordChangeForm.getOldPassword()))
             model.addAttribute("errorMessage", "Incorrect password!");
         else if (!passwordChangeForm.getNewPassword().equals(passwordChangeForm.getNewPasswordConfirm()))
             model.addAttribute("errorMessage", "Passwords must match!");
-        else {
+        else if (!(newPasswordLength >= 8 && newPasswordLength <= 16)) {
+            model.addAttribute("invalidData", true);
+            model.addAttribute("errorMessage", "Password length must be 8-16 characters.");
+        } else {
             user.setPassword(passwordChangeForm.getNewPassword());
             user = userService.updateUserPassword(user);
             session().setAttribute("loggedUser", user);
